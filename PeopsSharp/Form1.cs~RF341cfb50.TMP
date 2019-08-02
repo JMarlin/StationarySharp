@@ -1,0 +1,61 @@
+﻿using System;
+using System.Threading;
+using System.Windows.Forms;
+using System.Runtime.InteropServices;
+
+namespace StationarySharp
+{
+    public partial class Form1 : Form
+    {
+        private Renderer renderer; 
+        
+         ~Form1() {
+
+            renderer.Exit();
+         }
+
+        private void form_closing(object sender, FormClosingEventArgs e) {
+
+            renderer.Exit();
+            Application.Exit();
+        }
+
+        private IntPtr _WndprocWrap(IntPtr hwnd, int message, IntPtr wparam, IntPtr lparam) {
+
+            Message m = new Message();
+            m.Msg = message;
+            m.HWnd = hwnd; 
+            m.WParam = wparam;
+            m.LParam = lparam;
+
+            this.WndProc(ref m);
+
+            return m.Result;
+        }
+
+        public Form1() {
+
+            InitializeComponent();
+
+            Cube cube = new Cube(1, Color24.FromRGB(255, 255, 255));
+            cube.Translate(0f, -0.5f, 1.5f);
+
+            Cube cube2 = new Cube(0.25f, Color24.FromRGB(255, 255, 255));
+            cube2.Translate(0f, 0.5f, 2.0f);
+
+            renderer = new Renderer(this, this._WndprocWrap, () => {
+
+                cube.RotateXLocal(1);
+                cube.RotateYLocal(2);
+                cube.RotateZLocal(3);
+
+                return true;
+            });
+
+            renderer.Objects.Add(cube);
+            renderer.Objects.Add(cube2);
+
+            this.FormClosing += new FormClosingEventHandler(this.form_closing);
+        }
+    }
+}

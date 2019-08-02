@@ -1,0 +1,9 @@
+C:\Users\424576\source\repos\PeopsSharp\PeopsSharp\obj\Debug\PeopsSharp.Form1.resources
+C:\Users\424576\source\repos\PeopsSharp\PeopsSharp\obj\Debug\PeopsSharp.Properties.Resources.resources
+C:\Users\424576\source\repos\PeopsSharp\PeopsSharp\obj\Debug\PeopsSharp.csproj.GenerateResource.Cache
+C:\Users\424576\source\repos\PeopsSharp\PeopsSharp\obj\Debug\PeopsSharp.csproj.CoreCompileInputs.cache
+C:\Users\424576\source\repos\PeopsSharp\PeopsSharp\bin\Debug\PeopsSharp.exe
+C:\Users\424576\source\repos\PeopsSharp\PeopsSharp\bin\Debug\PeopsSharp.pdb
+C:\Users\424576\source\repos\PeopsSharp\PeopsSharp\obj\Debug\PeopsSharp.exe
+C:\Users\424576\source\repos\PeopsSharp\PeopsSharp\obj\Debug\PeopsSharp.pdb
+C:\Users\424576\source\repos\PeopsSharp\PeopsSharp\obj\Debug\PeopsSharp.csprojResolveAssemblyReference.cache

@@ -1,0 +1,46 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Runtime.InteropServices;
+
+namespace PeopsSharp
+{
+    public partial class Form1 : Form
+    {
+
+        private delegate long WNDPROC(IntPtr hwnd, int message, IntPtr wparam, IntPtr lparam);
+
+        [DllImport("gpuPeopsSoft.dll", CallingConvention = CallingConvention.StdCall)]
+        private static extern long GPUinit();
+
+        [DllImport("gpuPeopsSoft.dll")]
+        private static extern long GPUopen(IntPtr hWnd, WNDPROC new_wndproc);
+
+        public long wndproc_wrap(IntPtr hwnd, int message, IntPtr wparam, IntPtr lparam) {
+
+            Message m = new Message();
+            m.Msg = message;
+            m.HWnd = hwnd;
+            m.WParam = wparam;
+            m.LParam = lparam;
+
+            this.WndProc(m);
+
+
+        }
+
+        public Form1()
+        {
+            InitializeComponent();
+            
+
+            GPUinit();
+            GPUopen(this.Handle, this.WndProc);
+        }
+    }
+}

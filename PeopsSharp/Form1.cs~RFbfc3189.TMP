@@ -1,0 +1,127 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Runtime.InteropServices;
+
+namespace PeopsSharp
+{
+    public partial class Form1 : Form
+    {
+
+        private delegate IntPtr WNDPROC(IntPtr hwnd, int message, IntPtr wparam, IntPtr lparam);
+
+        [DllImport("gpuPeopsSoft.dll", CallingConvention = CallingConvention.StdCall)]
+        private static extern long GPUinit();
+
+        [DllImport("gpuPeopsSoft.dll")]
+        private static extern long GPUopen(IntPtr hWnd, WNDPROC new_wndproc);
+
+        [DllImport("gpuPeopsSoft.dll")]
+        private static extern void GPU_Update();
+
+        [DllImport("gpuPeopsSoft.dll")]
+        private static extern void GPUwriteStatus(UInt32 data);
+
+        [DllImport("gpuPeopsSoft.dll")]
+        private static extern void GPUwriteData(UInt32 data);
+
+        private bool initialized = false;
+
+        private static UInt32 GPU_DATA_CMD(UInt32 c, UInt32 o) {
+
+            return ((((c) & 0x7) << 5) | ((o) & 0x1F));
+        }
+
+        private const UInt16 PRIM_POLY = 0x01;
+        private const UInt16 PRIM_LINE = 0x02;
+        private const UInt16 PRIM_SPRITE = 0x04;
+        private const UInt16 OPT_TGE = 0x01;
+        private const UInt16 OPT_ABE = 0x02;
+        private const UInt16 OPT_TME = 0x04;
+        private const UInt16 OPT_VTX = 0x08;
+        private const UInt16 OPT_IIP = 0x10;
+
+        public IntPtr wndproc_wrap(IntPtr hwnd, int message, IntPtr wparam, IntPtr lparam) {
+
+            Message m = new Message();
+            m.Msg = message;
+            m.HWnd = hwnd;
+            m.WParam = wparam;
+            m.LParam = lparam;
+
+            this.WndProc(ref m);
+            if(this.initialized) GPU_Update();
+
+            return m.Result;
+        }
+
+        private static int S_do_gpu_startup() {
+
+            GPUwriteStatus(0x00000000); //Reset GPU
+            GPUwriteStatus(0x06CDA1F4); //Set horizontal display range to the max and min values of 0x1F4 - 0xCDA
+            GPUwriteStatus(0x07040010); //Set vertical display range to the default NTSC values of 0x010-0x100	 
+            GPUwriteStatus(0x08000001); //Set video mode to NTSC 15-bit non-interlaced 320x240
+            GPUwriteStatus(0x05000000); //Set x/y start of display area to (0,0)
+            GPUwriteData(0xE1000300); //Set draw mode
+            GPUwriteData(0xE3000000); //Set framebuffer drawing area top left to (0, 0)
+            GPUwriteData(0xE403C140); //Set framebuffer drawing area bottom right to (320, 240)
+            GPUwriteData(0xE5000000); //Set framebuffer drawing area offset to
+            GPUwriteStatus(0x03000000); //Enable the GPU
+
+            return 1; // ZList_init();
+        }
+
+        private static void S_draw_tri(UInt16 x0, UInt16 y0, UInt16 x1, UInt16 y1, UInt16 x2, UInt16 y2, byte r, byte g, byte b) {
+
+            //Poly, one color, flat shaded
+            GPUwriteData(
+                (GPU_DATA_CMD(PRIM_POLY, 0) << 24) |
+                (UInt32)b << 16 |
+                (UInt32)g << 8 |
+                (UInt32)r
+            );
+
+            //Vertex 1
+            GPUwriteData(((UInt32)y0 << 16) | (UInt32)x0);
+
+            //Vertex 2
+            GPUwriteData(((UInt32)y1 << 16) | (UInt32)x1);
+
+            //Vertex 3
+            GPUwriteData(((UInt32)y2 << 16) | (UInt32)x2);
+        }
+
+        private short tip_offset = 0;
+        private short direction = 1;
+
+        private void update_tri(object sender, EventArgs e) {
+
+            S_draw_tri(100, 100, 200, 100, (short)(100 + this.tip_offset), 150, 0xD0, 0x20, 0xC0);
+
+            this.tip_offset += this.direction;
+            if (this.tip_offset <= 0 || this.tip_offset >= 100)
+                this.direction = (short)(this.direction * -1);
+
+            S_draw_tri(100, 100, 200, 100, 100 + this.tip_offset, 150, 0xD0, 0x20, 0xC0);
+        }
+
+        public Form1() {
+
+            InitializeComponent();
+            
+            GPUinit();
+            GPUopen(this.Handle, this.wndproc_wrap);
+            this.initialized = true;
+            S_do_gpu_startup();
+            Timer timer = new Timer();
+            timer.Interval = 1;
+            timer.Tick += new EventHandler(update_tri);
+            timer.Start();
+        }
+    }
+}
